@@ -2,9 +2,10 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 const { AdyenCheckout, Dropin } = window.AdyenWeb;
 
 // Starts the (Adyen.Web) AdyenCheckout with your specified configuration by calling the `/paymentMethods` endpoint.
+// ...
 async function startCheckout() {
-try {
-        // Step 8 - Retrieve the available payment methods
+    try {
+        // ...
         const paymentMethodsResponse = await fetch("/api/paymentMethods", {
             method: "POST",
             headers: {
@@ -23,9 +24,8 @@ try {
                 'en-US': {
                     'creditCard.securityCode.label': 'CVV/CVC'
                 }
-            }
-        },
-        // Step 10 - Add the onSubmit handler by telling it what endpoint to call when the pay button is pressed.
+            },
+            // Step 10 - Add the onSubmit handler by telling it what endpoint to call when the pay button is pressed.
             onSubmit: async (state, component, actions) => {
                 console.info("onSubmit", state, component, actions);
                 try {
@@ -126,4 +126,5 @@ function handleOnPaymentFailed(response) {
             break;
     }
 }
+
 startCheckout();
