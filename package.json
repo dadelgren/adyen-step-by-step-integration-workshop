@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@adyen/adyen-web": "^6.26.0"
+  }
+}

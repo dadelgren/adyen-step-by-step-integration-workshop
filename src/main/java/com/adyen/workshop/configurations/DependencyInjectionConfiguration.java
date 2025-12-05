@@ -1,4 +1,14 @@
-// ...
+package com.adyen.workshop.configurations;
+
+import com.adyen.Client;
+import com.adyen.Config;
+import com.adyen.enums.Environment;
+import com.adyen.service.checkout.PaymentsApi;
+import com.adyen.util.HMACValidator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+// Step 4...
 
 @Configuration
 public class DependencyInjectionConfiguration {
