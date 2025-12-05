@@ -55,8 +55,26 @@ public class ApiController {
     // Step 9 - Implement the /payments call to Adyen.
     @PostMapping("/api/payments")
     public ResponseEntity<PaymentResponse> payments(@RequestHeader String host, @RequestBody PaymentRequest body, HttpServletRequest request) throws IOException, ApiException {
+        var paymentRequest = new PaymentRequest();
 
-        return ResponseEntity.ok().body(null);
+        var amount = new Amount()
+                .currency("EUR")
+                .value(9998L);
+        paymentRequest.setAmount(amount);
+        paymentRequest.setMerchantAccount(applicationConfiguration.getAdyenMerchantAccount());
+        paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
+
+        paymentRequest.setPaymentMethod(body.getPaymentMethod());
+
+        var orderRef = UUID.randomUUID().toString();
+        paymentRequest.setReference(orderRef);
+        // The returnUrl field basically means: Once done with the payment, where should the application redirect you?
+        paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/handleShopperRedirect?orderRef=" + orderRef); // Example: Turns into http://localhost:8080/handleShopperRedirect?orderRef=354fa90e-0858-4d2f-92b9-717cb8e18173
+
+        log.info("PaymentsRequest {}", paymentRequest);
+        var response = paymentsApi.payments(paymentRequest);
+        log.info("PaymentsResponse {}", response);
+        return ResponseEntity.ok().body(response);
     }
 
     // Step 13 - Handle details call (triggered after Native 3DS2 flow)
