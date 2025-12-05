@@ -83,8 +83,8 @@ public class ApiController {
 
         // Add the following lines, if you want to enable the Native 3DS2 flow:
         // Note: Visa requires additional properties to be sent in the request, see documentation for Native 3DS2: https://docs.adyen.com/online-payments/3d-secure/native-3ds2/web-drop-in/#make-a-payment
-        authenticationData.setThreeDSRequestData(new ThreeDSRequestData().nativeThreeDS(ThreeDSRequestData.NativeThreeDSEnum.PREFERRED));
-        paymentRequest.setAuthenticationData(authenticationData);
+        //authenticationData.setThreeDSRequestData(new ThreeDSRequestData().nativeThreeDS(ThreeDSRequestData.NativeThreeDSEnum.PREFERRED));
+        //paymentRequest.setAuthenticationData(authenticationData);
 
         paymentRequest.setOrigin(request.getScheme() + "://" + host);
         paymentRequest.setBrowserInfo(body.getBrowserInfo());
