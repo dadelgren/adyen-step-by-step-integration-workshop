@@ -75,6 +75,31 @@ public class ApiController {
         var requestOptions = new RequestOptions();
         requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
 
+        // Step 12 3DS2 Redirect - Add the following additional parameters to your existing payment request for 3DS2 Redirect:
+        // Note: Visa requires additional properties to be sent in the request, see documentation for Redirect 3DS2: https://docs.adyen.com/online-payments/3d-secure/redirect-3ds2/web-drop-in/#make-a-payment
+        var authenticationData = new AuthenticationData();
+        authenticationData.setAttemptAuthentication(AuthenticationData.AttemptAuthenticationEnum.ALWAYS);
+        paymentRequest.setAuthenticationData(authenticationData);
+
+        // Add the following lines, if you want to enable the Native 3DS2 flow:
+        // Note: Visa requires additional properties to be sent in the request, see documentation for Native 3DS2: https://docs.adyen.com/online-payments/3d-secure/native-3ds2/web-drop-in/#make-a-payment
+        authenticationData.setThreeDSRequestData(new ThreeDSRequestData().nativeThreeDS(ThreeDSRequestData.NativeThreeDSEnum.PREFERRED));
+        paymentRequest.setAuthenticationData(authenticationData);
+
+        paymentRequest.setOrigin(request.getScheme() + "://" + host);
+        paymentRequest.setBrowserInfo(body.getBrowserInfo());
+        paymentRequest.setShopperIP(request.getRemoteAddr());
+        paymentRequest.setShopperInteraction(PaymentRequest.ShopperInteractionEnum.ECOMMERCE);
+
+
+        var billingAddress = new BillingAddress();
+        billingAddress.setCity("Amsterdam");
+        billingAddress.setCountry("NL");
+        billingAddress.setPostalCode("1012KK");
+        billingAddress.setStreet("Rokin");
+        billingAddress.setHouseNumberOrName("49");
+        paymentRequest.setBillingAddress(billingAddress);
+
         log.info("PaymentsRequest {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest, requestOptions); // Notice how we're adding this property to our existing code*
         log.info("PaymentsResponse {}", response);
@@ -82,11 +107,14 @@ public class ApiController {
     }
 
     // Step 13 - Handle details call (triggered after Native 3DS2 flow)
+    // Step 13 - Handle details call (triggered after the Native 3DS2 flow, called from the frontend in step 14)
     @PostMapping("/api/payments/details")
     public ResponseEntity<PaymentDetailsResponse> paymentsDetails(@RequestBody PaymentDetailsRequest detailsRequest) throws IOException, ApiException
     {
-
-        return ResponseEntity.ok().body(null);
+        log.info("PaymentDetailsRequest {}", detailsRequest);
+        var response = paymentsApi.paymentsDetails(detailsRequest);
+        log.info("PaymentDetailsResponse {}", response);
+        return ResponseEntity.ok().body(response);
     }
 
     // Step 14 - Handle Redirect 3DS2 during payment.

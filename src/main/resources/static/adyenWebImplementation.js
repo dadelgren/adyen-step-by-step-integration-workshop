@@ -3,6 +3,8 @@ const { AdyenCheckout, Dropin } = window.AdyenWeb;
 
 // Starts the (Adyen.Web) AdyenCheckout with your specified configuration by calling the `/paymentMethods` endpoint.
 // ...
+
+// ...
 async function startCheckout() {
     try {
         // ...
@@ -65,6 +67,29 @@ async function startCheckout() {
             onError: (error, component) => {
                 console.error("onError", error.name, error.message, error.stack, component);
                 window.location.href = "/result/error";
+            },
+            // Step 13 onAdditionalDetails(...) - Use this to finalize the Native 3DS2 authentication.
+            onAdditionalDetails: async (state, component, actions) => {
+                console.info("onAdditionalDetails", state, component);
+                try {
+                    const { resultCode } = await fetch("/api/payments/details", {
+                        method: "POST",
+                        body: state.data ? JSON.stringify(state.data) : "",
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    }).then(response => response.json());
+
+                    if (!resultCode) {
+                        console.warn("reject");
+                        actions.reject();
+                    }
+
+                    actions.resolve({ resultCode });
+                } catch (error) {
+                    console.error(error);
+                    actions.reject();
+                }
             }
         };
 
@@ -98,7 +123,6 @@ async function startCheckout() {
     }
 }
 
-// Step 10 - Function to handle payment completion redirects
 function handleOnPaymentCompleted(response) {
     switch (response.resultCode) {
         case "Authorised":
@@ -114,7 +138,6 @@ function handleOnPaymentCompleted(response) {
     }
 }
 
-// Step 10 - Function to handle payment failure redirects
 function handleOnPaymentFailed(response) {
     switch (response.resultCode) {
         case "Cancelled":
