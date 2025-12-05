@@ -24,8 +24,51 @@ try {
                     'creditCard.securityCode.label': 'CVV/CVC'
                 }
             }
+        },
+        // Step 10 - Add the onSubmit handler by telling it what endpoint to call when the pay button is pressed.
+            onSubmit: async (state, component, actions) => {
+                console.info("onSubmit", state, component, actions);
+                try {
+                    if (state.isValid) {
+                        const { action, order, resultCode } = await fetch("/api/payments", {
+                            method: "POST",
+                            body: state.data ? JSON.stringify(state.data) : "",
+                            headers: {
+                                "Content-Type": "application/json",
+                            }
+                        }).then(response => response.json());
+
+                        if (!resultCode) {
+                            console.warn("reject");
+                            actions.reject();
+                        }
+
+                        actions.resolve({
+                            resultCode,
+                            action,
+                            order
+                        });
+                    }
+                } catch (error) {
+                    console.error(error);
+                    actions.reject();
+                }
+            },
+            onPaymentCompleted: (result, component) => {
+                console.info("onPaymentCompleted", result, component);
+                handleOnPaymentCompleted(result, component);
+            },
+            onPaymentFailed: (result, component) => {
+                console.info("onPaymentFailed", result, component);
+                handleOnPaymentFailed(result, component);
+            },
+            onError: (error, component) => {
+                console.error("onError", error.name, error.message, error.stack, component);
+                window.location.href = "/result/error";
+            }
         };
 
+        // Optional configuration for cards
         const paymentMethodsConfiguration = {
             card: {
                 showBrandIcon: true,
@@ -57,12 +100,30 @@ try {
 
 // Step 10 - Function to handle payment completion redirects
 function handleOnPaymentCompleted(response) {
-
+    switch (response.resultCode) {
+        case "Authorised":
+            window.location.href = "/result/success";
+            break;
+        case "Pending":
+        case "Received":
+            window.location.href = "/result/pending";
+            break;
+        default:
+            window.location.href = "/result/error";
+            break;
+    }
 }
 
 // Step 10 - Function to handle payment failure redirects
 function handleOnPaymentFailed(response) {
-
+    switch (response.resultCode) {
+        case "Cancelled":
+        case "Refused":
+            window.location.href = "/result/failed";
+            break;
+        default:
+            window.location.href = "/result/error";
+            break;
+    }
 }
-
 startCheckout();
