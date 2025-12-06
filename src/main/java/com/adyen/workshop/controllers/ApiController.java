@@ -33,9 +33,11 @@ public class ApiController {
     private final RecurringApi recurringApi;
 
 
-    public ApiController(ApplicationConfiguration applicationConfiguration, PaymentsApi paymentsApi) {
+    public ApiController(ApplicationConfiguration applicationConfiguration, PaymentsApi paymentsApi, ModificationsApi modificationsApi, RecurringApi recurringApi) {
         this.applicationConfiguration = applicationConfiguration;
         this.paymentsApi = paymentsApi;
+        this.modificationsApi = modificationsApi;
+        this.recurringApi = recurringApi;
     }
 
     // Step 0
