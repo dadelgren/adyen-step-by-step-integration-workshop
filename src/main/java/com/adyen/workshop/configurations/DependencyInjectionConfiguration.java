@@ -1,14 +1,15 @@
+
 package com.adyen.workshop.configurations;
 
 import com.adyen.Client;
 import com.adyen.Config;
 import com.adyen.enums.Environment;
+import com.adyen.service.checkout.ModificationsApi;
 import com.adyen.service.checkout.PaymentsApi;
+import com.adyen.service.checkout.RecurringApi;
 import com.adyen.util.HMACValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-// Step 4...
 
 @Configuration
 public class DependencyInjectionConfiguration {
@@ -21,9 +22,10 @@ public class DependencyInjectionConfiguration {
     @Bean
     Client client() {
         // Step 4
-        var config = new Config();
+        Config config = new Config();
         config.setApiKey(applicationConfiguration.getAdyenApiKey()); // We now use the Adyen API Key
-        config.setEnvironment(Environment.TEST);		     // Sets the environment to TEST
+        config.setEnvironment(Environment.TEST);                     // Sets the environment to TEST
+
         return new Client(config);
     }
 
@@ -33,5 +35,17 @@ public class DependencyInjectionConfiguration {
     }
 
     @Bean
-    HMACValidator hmacValidator() { return new HMACValidator(); }
+    ModificationsApi modificationsApi() {
+        return new ModificationsApi(client());
+    }
+
+    @Bean
+    RecurringApi recurringApi() {
+        return new RecurringApi(client());
+    }
+
+    @Bean
+    HMACValidator hmacValidator() {
+        return new HMACValidator();
+    }
 }
