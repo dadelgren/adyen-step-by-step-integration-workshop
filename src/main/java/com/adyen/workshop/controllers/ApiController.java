@@ -65,7 +65,7 @@ public class ApiController {
 
         var amount = new Amount()
                 .currency("EUR")
-                .value(9998L);
+                .value(000L);
         paymentRequest.setAmount(amount);
         paymentRequest.setMerchantAccount(applicationConfiguration.getAdyenMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -191,6 +191,7 @@ public class ApiController {
         paymentRequest.setOrigin(request.getScheme() + "://" + host);
         paymentRequest.setBrowserInfo(body.getBrowserInfo());
         paymentRequest.setShopperIP(request.getRemoteAddr());
+        paymentRequest.storePaymentMethod(true);
 
         var authenticationData = new AuthenticationData();
         authenticationData.setAttemptAuthentication(AuthenticationData.AttemptAuthenticationEnum.ALWAYS);
