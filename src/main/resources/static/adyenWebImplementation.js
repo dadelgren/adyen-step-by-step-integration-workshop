@@ -1,13 +1,11 @@
+
 const clientKey = document.getElementById("clientKey").innerHTML;
 const { AdyenCheckout, Dropin } = window.AdyenWeb;
 
 // Starts the (Adyen.Web) AdyenCheckout with your specified configuration by calling the `/paymentMethods` endpoint.
-// ...
-
-// ...
 async function startCheckout() {
     try {
-        // ...
+        // Step 8 - Retrieve the available payment methods
         const paymentMethodsResponse = await fetch("/api/paymentMethods", {
             method: "POST",
             headers: {
@@ -27,14 +25,19 @@ async function startCheckout() {
                     'creditCard.securityCode.label': 'CVV/CVC'
                 }
             },
-            // Step 10 - Add the onSubmit handler by telling it what endpoint to call when the pay button is pressed.
             onSubmit: async (state, component, actions) => {
                 console.info("onSubmit", state, component, actions);
                 try {
                     if (state.isValid) {
-                        const { action, order, resultCode } = await fetch("/api/payments", {
+                        const payload = {
+                            ...state.data,
+                            storePaymentMethod: true,
+                            shopperReference: "subscription-shopper"
+                        };
+
+                        const { action, order, resultCode } = await fetch("/api/subscription-create", {
                             method: "POST",
-                            body: state.data ? JSON.stringify(state.data) : "",
+                            body: JSON.stringify(payload),
                             headers: {
                                 "Content-Type": "application/json",
                             }
@@ -68,7 +71,6 @@ async function startCheckout() {
                 console.error("onError", error.name, error.message, error.stack, component);
                 window.location.href = "/result/error";
             },
-            // Step 13 onAdditionalDetails(...) - Use this to finalize the Native 3DS2 authentication.
             onAdditionalDetails: async (state, component, actions) => {
                 console.info("onAdditionalDetails", state, component);
                 try {
@@ -93,15 +95,17 @@ async function startCheckout() {
             }
         };
 
-        // Optional configuration for cards
         const paymentMethodsConfiguration = {
             card: {
                 showBrandIcon: true,
                 hasHolderName: true,
                 holderNameRequired: true,
                 name: "Credit or debit card",
+                // Enable the toggle to store card details (tokenization)
+                enableStoreDetails: true,
+                showStorePaymentMethodButton: true,
                 amount: {
-                    value: 9998,
+                    value: 0,
                     currency: "EUR",
                 },
                 placeholders: {
@@ -123,7 +127,12 @@ async function startCheckout() {
     }
 }
 
+// Step 10 - Function to handle payment completion redirects
 function handleOnPaymentCompleted(response) {
+    if (response.pspReference) {
+        console.info(`Payment authorised with pspReference=${response.pspReference}. Use this in curl calls for adjust/capture/refund.`);
+        window.lastPspReference = response.pspReference;
+    }
     switch (response.resultCode) {
         case "Authorised":
             window.location.href = "/result/success";
@@ -138,6 +147,7 @@ function handleOnPaymentCompleted(response) {
     }
 }
 
+// Step 10 - Function to handle payment failure redirects
 function handleOnPaymentFailed(response) {
     switch (response.resultCode) {
         case "Cancelled":
@@ -149,5 +159,20 @@ function handleOnPaymentFailed(response) {
             break;
     }
 }
+
+// Utility to quickly see incoming webhooks while testing the preauthorisation flow.
+async function fetchRecentWebhooks() {
+    try {
+        const events = await fetch("/api/webhooks/recent").then(response => response.json());
+        console.table(events);
+        return events;
+    } catch (error) {
+        console.error("Unable to fetch recent webhooks", error);
+        return [];
+    }
+}
+
+// Expose helper for manual testing in the browser console
+window.fetchRecentWebhooks = fetchRecentWebhooks;
 
 startCheckout();
